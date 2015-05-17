@@ -3,6 +3,7 @@ import os
 import argparse
 import misc
 import folderParser
+import kit
 
 def main(args):
     parser = argparse.ArgumentParser(description='ScrappyDoo')
@@ -12,10 +13,16 @@ def main(args):
     args = parser.parse_args()
     misc.Welcome()
     folder = folderParser.SelectFolder()
+    kitFiles = folderParser.FindAllKits(folder)
+
+    print("Found:")
+    print(kitFiles)
+    input()
+
+    kit.ProcessKits(kitFiles)
     print()
     print()
     print()
-    print(folder)
     print("Done!")
 
 if __name__ == "__main__":

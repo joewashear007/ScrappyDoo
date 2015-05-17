@@ -1,10 +1,19 @@
 import os
+import kit
 
 def Header():
     os.system('cls' if os.name == 'nt' else 'clear')
     print()
     print()
     print("Select the folder with the downloaded files")
+    print("--------------------------------------------------------------------")
+    print()
+
+def HeaderKits():
+    os.system('cls' if os.name == 'nt' else 'clear')
+    print()
+    print()
+    print("Find all of the zip in the choosen folder")
     print("--------------------------------------------------------------------")
     print()
 
@@ -57,3 +66,13 @@ def GetCustomDir():
             print()
             print("That doesn't seem to be a folder, please try again")
             print()
+
+def FindAllKits(dir):
+    HeaderKits()
+
+    kitFiles = []
+    files = os.listdir(dir)
+    for file in files:
+        if file.lower().endswith(".zip"):
+            kitFiles.append(file)
+    return kitFiles

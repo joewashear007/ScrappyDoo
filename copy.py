@@ -4,13 +4,6 @@ import zipfile
 import fnmatch
 import uuid
 
-class Kit:
-    def __init__(self, name, filename):
-        self.embellishments = []
-        self.papers = []
-        self.name = name
-        self.filename = filename
-
 def main():
     kits = findAll(".")
     for kit in kits:
