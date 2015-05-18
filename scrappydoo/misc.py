@@ -13,3 +13,10 @@ def Welcome():
     print()
     input("Please Press the 'Enter' key to continue...")
     os.system('cls' if os.name == 'nt' else 'clear')
+
+def ConfirmInput(question):
+    print(question)
+    print(" 0) No (default)")
+    print(" 1) Yes")
+    saveName = input("Please Enter Choice: ")
+    return saveName.isdigit() and int(saveName) is 1

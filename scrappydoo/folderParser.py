@@ -1,4 +1,5 @@
 import os
+import misc
 import kit
 
 def Header():
@@ -24,22 +25,17 @@ def SelectFolder():
 
     if os.path.isdir(downloadDir):
         while True:
-            print("The scrapbook zip files in your downloads folder? ")
-            print("That folder is '" + downloadDir + "'")
-            print(" 1) Yes")
-            print(" 2) No")
-            inDownloadDirStr = input("Please Select: ")
-            if inDownloadDirStr.isdigit():
-                inDownloadDir = int(inDownloadDirStr)
-                if inDownloadDir == 1 :
-                    return downloadDir
-                if inDownloadDir == 2:
-                    return GetCustomDir();
+            print("Your Download folder is '" + downloadDir + "'")
+            inDownloadDir = misc.ConfirmInput("Are the scrapbook zip files in your downloads folder? ")
+            if inDownloadDir:
+                return downloadDir
+            else:
+                return GetCustomDir();
 
             Header()
             print()
             print(" Error!")
-            print(" The input '" + inDownloadDirStr + "' doesn't seemed to work, please try again")
+            print(" The input '" + inDownloadDir + "' doesn't seemed to work, please try again")
             print()
             print()
 
