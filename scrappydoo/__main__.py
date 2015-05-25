@@ -4,6 +4,7 @@ import argparse
 import misc
 import folderParser
 import kit
+import pprint
 
 def main(args):
     parser = argparse.ArgumentParser(description='ScrappyDoo')
@@ -19,7 +20,9 @@ def main(args):
     print(kitFiles)
     input()
 
-    kit.ProcessKits(kitFiles)
+    kits = kit.ProcessKits(kitFiles)
+    for k in kits:
+        print(kits[k])
     print()
     print()
     print()

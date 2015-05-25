@@ -26,7 +26,7 @@ def SelectFolder():
     if os.path.isdir(downloadDir):
         while True:
             print("Your Download folder is '" + downloadDir + "'")
-            inDownloadDir = misc.ConfirmInput("Are the scrapbook zip files in your downloads folder? ")
+            inDownloadDir = misc.ConfirmInput("Are the scrapbook zip files in your downloads folder? ", True)
             if inDownloadDir:
                 return downloadDir
             else:

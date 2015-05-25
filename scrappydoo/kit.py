@@ -11,6 +11,13 @@ class Kit:
             self.files[type] = []
         self.files[type].append(filename)
 
+    def __str__(self):
+        kstr = self.name +  "(" + str(len(self.files)) + ")\n"
+        for type in self.files:
+            for f in self.files[type]:
+                kstr += type + ": " + f + "\n"
+        return kstr
+
 def Header(num, total):
     os.system('cls' if os.name == 'nt' else 'clear')
     print()
@@ -30,11 +37,24 @@ def ProcessKits(kitFiles):
         print()
         kitNameInfo = GetKitName(file, kitsZips)
         if kitNameInfo is None:
+            #user skipped the kit
             continue
+        # Kit Name & the filename string of the kit
         name, fileKitStr = kitNameInfo
-        kitsZips[fileKitStr] = Kit(name)
+        if not fileKitStr in kitsZips:
+            kitsZips[fileKitStr] = Kit(name)
         kitType = GetKitType(file, name)
         kitsZips[fileKitStr].addFile(kitType, file)
+    kits = {}
+    for z in kitsZips:
+        if kitsZips[z].name in kits:
+            for type in kitsZips[z].files:
+                if type not in kits[kitsZips[z].name].files:
+                    kits[kitsZips[z].name].files[type] = []
+                kits[kitsZips[z].name].files[type] += kitsZips[z].files[type]
+        else:
+            kits[kitsZips[z].name] = kitsZips[z]
+    return kits;
 
 def GetKitName(kit, kitsZips):
     #remove the end '-pp'
@@ -56,7 +76,7 @@ def GetKitName(kit, kitsZips):
             if name is not "" :
                 print()
                 print("Entered Name = '" + name + "'")
-                goodInput = misc.ConfirmInput("Is the name right?")
+                goodInput = misc.ConfirmInput("Is the name right?", True)
     return (name, kitStr)
 
 def GetKitType(kit, kitName):
