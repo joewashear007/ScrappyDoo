@@ -2,24 +2,8 @@ import os
 import misc
 import kit
 
-def Header():
-    os.system('cls' if os.name == 'nt' else 'clear')
-    print()
-    print()
-    print("Select the folder with the downloaded files")
-    print("--------------------------------------------------------------------")
-    print()
-
-def HeaderKits():
-    os.system('cls' if os.name == 'nt' else 'clear')
-    print()
-    print()
-    print("Find all of the zip in the choosen folder")
-    print("--------------------------------------------------------------------")
-    print()
-
 def SelectFolder():
-    Header()
+    misc.SetHeader("Select the folder with the downloaded files")
     homedir = os.path.expanduser("~")
     downloadDir = os.path.join(homedir, "Downloads")
 
@@ -31,20 +15,18 @@ def SelectFolder():
                 return downloadDir
             else:
                 return GetCustomDir();
-
-            Header()
+            misc.SetHeader("Select the folder with the downloaded files")
             print()
             print(" Error!")
             print(" The input '" + inDownloadDir + "' doesn't seemed to work, please try again")
             print()
             print()
-
     else:
         return GetCustomDir()
 
 def GetCustomDir():
     while True:
-        Header()
+        misc.SetHeader("Select the folder with the downloaded files")
         print()
         print("Please enter the path to the folder where your files are at")
         print()
@@ -64,7 +46,7 @@ def GetCustomDir():
             print()
 
 def FindAllKits(dir):
-    HeaderKits()
+    misc.SetHeader("Finding all of the zip in: " + dir)
 
     kitFiles = []
     files = os.listdir(dir)

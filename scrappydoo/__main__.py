@@ -3,7 +3,7 @@ import os
 import argparse
 import misc
 import folderParser
-import kit
+import kitutil
 import pprint
 
 def main(args):
@@ -15,14 +15,8 @@ def main(args):
     misc.Welcome()
     folder = folderParser.SelectFolder()
     kitFiles = folderParser.FindAllKits(folder)
-
-    print("Found:")
-    print(kitFiles)
-    input()
-
-    kits = kit.ProcessKits(kitFiles)
-    for k in kits:
-        print(kits[k])
+    kits = kitutil.ProcessKits(kitFiles)
+    kitutil.ExtractKits(kits, folder)
     print()
     print()
     print()

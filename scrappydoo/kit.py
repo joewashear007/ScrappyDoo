@@ -1,5 +1,8 @@
 import os
-import misc
+import tempfile
+import zipfile
+import uuid
+import shutil
 
 class Kit:
     def __init__(self, name):
@@ -18,123 +21,53 @@ class Kit:
                 kstr += type + ": " + f + "\n"
         return kstr
 
-def Header(num, total):
-    os.system('cls' if os.name == 'nt' else 'clear')
-    print()
-    print()
-    print("Get Kit Information (", num, " of ", total, ")")
-    print("--------------------------------------------------------------------")
-    print()
+    def extract(self, current, dest):
+        with tempfile.TemporaryDirectory() as tmpdirname:
+            for type in self.files:
+                os.makedirs(tmpdirname + "/" + type)
+                for file in self.files[type]:
+                    print("Extracting: ", file, "(", type ,")")
+                    kitzip = zipfile.ZipFile( current + "/" + file)
+                    #layout : tmpDir / filename / stuff
+                    kitzip.extractall(tmpdirname)
+                    self.copyImages(tmpdirname, os.path.splitext(os.path.basename(file))[0], type)
+            self.createManifest(tmpdirname)
+            self.CopyKitFiles(tmpdirname, dest)
 
-def ProcessKits(kitFiles):
-    kitsZips = {}
-    x = 0
-    for file in kitFiles:
-        x = x + 1
-        Header(x, len(kitFiles))
-        print("Current File: ", file)
-        print("If the file is not a kit or you like like to skip it, please enter '#skip' for the name")
-        print()
-        kitNameInfo = GetKitName(file, kitsZips)
-        if kitNameInfo is None:
-            #user skipped the kit
-            continue
-        # Kit Name & the filename string of the kit
-        name, fileKitStr = kitNameInfo
-        if not fileKitStr in kitsZips:
-            kitsZips[fileKitStr] = Kit(name)
-        kitType = GetKitType(file, name)
-        kitsZips[fileKitStr].addFile(kitType, file)
-    kits = {}
-    for z in kitsZips:
-        if kitsZips[z].name in kits:
-            for type in kitsZips[z].files:
-                if type not in kits[kitsZips[z].name].files:
-                    kits[kitsZips[z].name].files[type] = []
-                kits[kitsZips[z].name].files[type] += kitsZips[z].files[type]
-        else:
-            kits[kitsZips[z].name] = kitsZips[z]
-    return kits;
+    def copyImages(self, tmpDir, folder, dest):
+        exts = [".png", ".jpg"]
+        print(" -> Copying Images from ", folder)
+        #counter for renaming
+        for i, (rootpath, subdirs, files) in enumerate(os.walk(os.path.join(tmpDir, folder))):
+            for filename in files:
+                if os.path.basename(filename).lower() == "folder":
+                    # don't copy the folder image
+                    continue
+                if os.path.splitext(filename)[1].lower() in exts:
+                    newName = os.path.join(tmpDir, dest, filename)
+                    if not os.path.exists(newName):
+                        shutil.move(os.path.join(rootpath, filename), newName)
+                    else:
+                        # Rename the file if conflict using the loop index
+                        f = os.path.splitext(newName)
+                        shutil.move(os.path.join(rootpath, filename), f[0]+"-"+str(i)+f[1])
+        shutil.rmtree(os.path.join(tmpDir, folder))
 
-def GetKitName(kit, kitsZips):
-    #remove the end '-pp'
-    kitStr = kit.rsplit("-", 1)[0]
-    name = None
-    goodInput = False
-    while not goodInput:
-        print()
-        if kitStr in kitsZips:
-            name = input("Please Enter Kit Name (default = " + kitsZips[kitStr].name + "): ")
-            name = name or kitsZips[kitStr].name
-            goodInput = True
-            if name == "#skip":
-                return None
-        else:
-            name = input("Please Enter Kit Name: ")
-            if name == "#skip":
-                return None
-            if name is not "" :
-                print()
-                print("Entered Name = '" + name + "'")
-                goodInput = misc.ConfirmInput("Is the name right?", True)
-    return (name, kitStr)
+    def createManifest(self, tmpDir):
+        manifest = []
+        manifest.append('<Manifest vendorid="0" vendorpackageid="0" maintaincopyright="True" dpi="300">')
+        manifest.append('<Groups />')
+        manifest.append('<Entries>')
+        for type in self.files:
+            imageType = type if type is "embellishment" or type is "paper" else "embellishment"
+            for image in os.listdir(os.path.join(tmpDir, type)):
+                manifest.append('<Image ID="'+str(uuid.uuid4())+'" Name="'+os.path.join(type, image)+'" Group="'+imageType+'" />')
+        manifest.append('</Entries>')
+        manifest.append('</Manifest>')
 
-def GetKitType(kit, kitName):
-    #Remove file ext and get the ending -ep
-    kitType = kit.rsplit(".")[0].rsplit("-", 1)[1]
-    types = {1: "embellishment", 2: "alpha", 3: "paper", 4:"other"}
-    defaultTypes = {"ep":1, "ap":2, "pp":3, "alpha": 2, "alphas": 2 }
-    default = 1
-    if kitType in defaultTypes:
-        default = defaultTypes[kitType]
-        print("Kit Type: ", kitType, " -> ", defaultTypes[kitType])
+        with open(tmpDir + '/package.manifestx', 'w') as f:
+            for line in manifest:
+                f.write(line + os.linesep)
 
-    while True:
-        print()
-        print("Please choose the type of this kit:")
-        print(" 1) Embellishment")
-        print(" 2) Alpha")
-        print(" 3) Paper")
-        print(" 4) Other")
-        print()
-        action = input("Please Select Number Above (default = " + types[default] + " ):")
-        if action is "":
-            return types[default];
-        if action.isdigit():
-            actionNum = int(action)
-            if actionNum > 0 and actionNum < len(types)+1:
-                return types[actionNum]
-
-
-
-def ExtraKit(file):
-    tmpDir = "./tmp";
-    kitNames = {}
-    x = 0
-    for kit in kits:
-    # kit = next(iter(kits.keys()))
-        x = x + 1
-        print()
-        print()
-        print()
-        print("Extracting: ", kit, " ( ", x, " of ", len(kits), ")")
-        kitStr = kit.rsplit("-", 1)[0]
-        print("Kit Name: ", kitStr)
-        if kitStr in kitNames:
-            name = input("Please Enter Kit Name (default = "+kitNames[kitStr]+"): ")
-            name = name or kitNames[kitStr]
-        else:
-            name = input("Please Enter Kit Name: ")
-            kitNames[kitStr] =name
-
-        if os.path.exists(tmpDir):
-            shutil.rmtree(tmpDir)
-        else:
-            os.makedirs(tmpDir)
-
-        if not os.path.exists("./" + name):
-            os.makedirs("./" + name)
-        kitzip = zipfile.ZipFile("./" + kit)
-        kitzip.extractall(tmpDir)
-        images = copyExtractedFiles("./" + name +"/")
-        createManifest(kit, name, images, kits[kit])
+    def CopyKitFiles(self, tmpDir, dest):
+        shutil.copytree(tmpDir, os.path.join(dest, self.name))
