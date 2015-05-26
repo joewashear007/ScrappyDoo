@@ -1,5 +1,6 @@
 import os
 import misc
+import shutil
 from kit import Kit
 
 def ProcessKits(kitFiles):
@@ -51,7 +52,7 @@ def GetKitName(kit, kitsZips):
                 return None
             if name is not "" :
                 print()
-                goodInput = misc.ConfirmInput("Is the '" + name + "' right?", True)
+                goodInput = misc.ConfirmInput("Is '" + name + "' right?", True)
     return (name, kitStr)
 
 def GetKitType(kit, kitName):
@@ -89,7 +90,83 @@ def ExtractKits(kits, current):
         except Exception as e:
             print()
             print()
-            print("We had issues extracting ", kitname)
+            print("We had issues extracting ", kitName)
             print("So we are going to kip it and move on...")
             print()
             print()
+
+
+def MoveKitFolders(kits, current):
+    misc.SetHeader("Moving Kits")
+    dest = ""
+    goodInput = False
+    while not goodInput:
+        print("Where should we move the kits?")
+        print(" 1) Into the Creative Memories Art Kits folder (Default)")
+        print(" 2) I want to enter a custom folder")
+        print(" 3) Skip this step")
+        action = input("Please Select Number Above:")
+        if action is "":
+            homedir = os.path.expanduser("~")
+            dest = os.path.join(homedir, "Documents", "Creative Memories")
+            goodInput = True
+        if action.isdigit():
+            actionNum = int(action)
+            if actionNum == 1:
+                homedir = os.path.expanduser("~")
+                dest = os.path.join(homedir, "Documents", "Creative Memories")
+                goodInput = True
+            if actionNum == 2:
+                dest = misc.GetDir("Please enter the destination folder")
+                goodInput = True
+            if actionNum == 3:
+                return
+        if not goodInput:
+            print()
+            print("Hmm, that input seems wrong. Try again!")
+            print()
+
+    if not os.path.isdir(dest):
+        dest = misc.GetDir(deat + " does not exist! Please enter a new destination folder")
+
+    errors = []
+    for name in kits:
+        print("Moving ", name)
+        try:
+            shutil.move(os.path.join(current, name), dest)
+        except Exception as e:
+            errors.append(name)
+            print()
+            print("Error! Could Not move kit", name)
+            print("Skipping the move for this kit")
+            print()
+
+    print("Done Moving Kits!")
+    print("It is best to open Creative Memories to make sure all of the kits were installed properly")
+    if len(errors)  > 0:
+        print()
+        print("===========================================================================")
+        print("ERROR!!! There were errors, not all files mght have been copied")
+        print("The following folders had errors")
+        for name in errors:
+            print(" * ", name)
+        print("===========================================================================")
+        print()
+        print()
+    misc.Pause()
+
+def DeleteKitFiles(kits, folder):
+    misc.SetHeader("Deleting Kits")
+    print()
+
+    for name in kits:
+        for type in kits[name].files:
+            for file in kits[name].files[type]:
+                print("Deleting ", file)
+                try:
+                    os.remove(os.path.join(current, file))
+                except Exception as e:
+                    print("Error! Could not delete ", file)
+                    print("Skipping... ")
+
+    misc.Pause()

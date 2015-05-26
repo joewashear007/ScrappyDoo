@@ -14,7 +14,7 @@ def SelectFolder():
             if inDownloadDir:
                 return downloadDir
             else:
-                return GetCustomDir();
+                return misc.GetDir("Please enter the path to the folder where your files are at")
             misc.SetHeader("Select the folder with the downloaded files")
             print()
             print(" Error!")
@@ -22,28 +22,7 @@ def SelectFolder():
             print()
             print()
     else:
-        return GetCustomDir()
-
-def GetCustomDir():
-    while True:
-        misc.SetHeader("Select the folder with the downloaded files")
-        print()
-        print("Please enter the path to the folder where your files are at")
-        print()
-        print("Some Helpful Notes:")
-        print(" * Find folder path first in the file explore program")
-        print(" * Copy the path to this folder")
-        print(" * Try right clicking this windows to paste")
-        print(" * If you really stuck, use Google")
-        print()
-
-        folder = input("Path: ")
-        if folder is not "" and os.path.isdir(folder):
-            return folder
-        else:
-            print()
-            print("That doesn't seem to be a folder, please try again")
-            print()
+        return misc.GetDir("Please enter the path to the folder where your files are at")
 
 def FindAllKits(dir):
     misc.SetHeader("Finding all of the zip in: " + dir)
