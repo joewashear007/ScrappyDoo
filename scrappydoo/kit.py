@@ -24,13 +24,21 @@ class Kit:
     def extract(self, current, dest):
         with tempfile.TemporaryDirectory() as tmpdirname:
             for type in self.files:
-                os.makedirs(tmpdirname + "/" + type)
+                os.makedirs(os.path.join(tmpdirname,type))
+                print("Extracting to:", os.path.join(tmpdirname,type))
                 for file in self.files[type]:
-                    print("Extracting: ", file, "(", type ,")")
+                    print("Extracting: ", file, "(", type ,")", "{file:",current + "/" + file,"}")
                     kitzip = zipfile.ZipFile( current + "/" + file)
                     #layout : tmpDir / filename / stuff
-                    kitzip.extractall(tmpdirname)
-                    self.copyImages(tmpdirname, os.path.splitext(os.path.basename(file))[0], type)
+                    try:
+                        kitzip.extractall(tmpdirname)
+                        self.copyImages(tmpdirname, os.path.splitext(os.path.basename(file))[0], type)
+                    except Exception as e:
+                        print()
+                        print(e)
+                        print()
+                        print("Error Extracting: ", self.name)
+                        input("Please Press the 'Enter' key to continue...")
             self.createManifest(tmpdirname)
             self.CopyKitFiles(tmpdirname, dest)
 

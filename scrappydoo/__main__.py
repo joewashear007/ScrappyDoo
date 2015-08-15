@@ -30,6 +30,7 @@ def main(args):
 
     kits = kitutil.ProcessKits(kitFiles)
     kitutil.ExtractKits(kits, folder)
+    misc.Pause()
 
     # Post processing - Move Files
     kitutil.MoveKitFolders(kits, folder)

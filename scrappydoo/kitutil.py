@@ -1,6 +1,7 @@
 import os
 import misc
 import shutil
+import subprocess
 from kit import Kit
 
 def ProcessKits(kitFiles):
@@ -88,6 +89,7 @@ def ExtractKits(kits, current):
         try:
             kits[kitName].extract(current, current)
         except Exception as e:
+            print(e)
             print()
             print()
             print("We had issues extracting ", kitName)
@@ -102,19 +104,19 @@ def MoveKitFolders(kits, current):
     goodInput = False
     while not goodInput:
         print("Where should we move the kits?")
-        print(" 1) Into the Creative Memories Art Kits folder (Default)")
+        print(" 1) Into the Personal Art Kits folder (Default)")
         print(" 2) I want to enter a custom folder")
         print(" 3) Skip this step")
         action = input("Please Select Number Above:")
         if action is "":
             homedir = os.path.expanduser("~")
-            dest = os.path.join(homedir, "Documents", "Creative Memories")
+            dest = os.path.join(homedir, "Documents", "Personal Art Kits")
             goodInput = True
         if action.isdigit():
             actionNum = int(action)
             if actionNum == 1:
                 homedir = os.path.expanduser("~")
-                dest = os.path.join(homedir, "Documents", "Creative Memories")
+                dest = os.path.join(homedir, "Documents", "Personal Art Kits")
                 goodInput = True
             if actionNum == 2:
                 dest = misc.GetDir("Please enter the destination folder")
@@ -127,7 +129,7 @@ def MoveKitFolders(kits, current):
             print()
 
     if not os.path.isdir(dest):
-        dest = misc.GetDir(deat + " does not exist! Please enter a new destination folder")
+        dest = misc.GetDir(dest + " does not exist! Please enter a new destination folder")
 
     errors = []
     for name in kits:
