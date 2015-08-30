@@ -8,6 +8,8 @@ class Kit:
     def __init__(self, name):
         self.name = name
         self.files = {}
+        self.hasError = False
+        self.error = None
 
     def addFile(self, type, filename):
         if type not in self.files:
@@ -21,45 +23,62 @@ class Kit:
                 kstr += type + ": " + f + "\n"
         return kstr
 
-    def extract(self, current, dest):
-        with tempfile.TemporaryDirectory() as tmpdirname:
+    def extract(self, fromDir, dest):
+        with tempfile.TemporaryDirectory() as tmpDir:
             for type in self.files:
-                os.makedirs(os.path.join(tmpdirname,type))
-                print("Extracting to:", os.path.join(tmpdirname,type))
+                tempPath = os.path.join(tmpDir, type)
+                os.makedirs(tempPath)
+                print("Extracting to:", tempPath)
                 for file in self.files[type]:
-                    print("Extracting: ", file, "(", type ,")", "{file:",current + "/" + file,"}")
-                    kitzip = zipfile.ZipFile( current + "/" + file)
-                    #layout : tmpDir / filename / stuff
+                    print("Extracting: ", file, "(", type ,")", "{file:",os.path.join(fromDir, file),"}")
+                    kitzip = zipfile.ZipFile( os.path.join(fromDir, file))
+                    #layout: tmpDir / filename / stuff
                     try:
-                        kitzip.extractall(tmpdirname)
-                        self.copyImages(tmpdirname, os.path.splitext(os.path.basename(file))[0], type)
+                        if kitzip.testzip() is None:
+                            kitzip.extractall(tmpDir)
+                            kitzip.close()
+                        else:
+                            self.hasError = True
+                            self.error = "Zip File Bad"
+                            print()
+                            print("Error Extracting: ", self.name)
+                            print("Zip File has Error!")
+                            print()
+                            input("Please Press the 'Enter' key to continue...")
                     except Exception as e:
+                        self.hasError = True
+                        self.error = e
                         print()
                         print(e)
                         print()
                         print("Error Extracting: ", self.name)
                         input("Please Press the 'Enter' key to continue...")
-            self.createManifest(tmpdirname)
-            self.CopyKitFiles(tmpdirname, dest)
+                    self.copyImages(tmpDir, tempPath)
+            self.createManifest(tmpDir)
+            self.CopyKitFiles(tmpDir, dest)
 
-    def copyImages(self, tmpDir, folder, dest):
+    def copyImages(self, fromDir, toDir):
         exts = [".png", ".jpg"]
-        print(" -> Copying Images from ", folder)
+        print(" -> Copying Images from ", fromDir)
+        skipPaths = [fromDir];
+        for type in self.files:
+            skipPaths.append(os.path.join(fromDir, type))
         #counter for renaming
-        for i, (rootpath, subdirs, files) in enumerate(os.walk(os.path.join(tmpDir, folder))):
+        for i, (rootpath, subdirs, files) in enumerate(os.walk(fromDir)):
+            if rootpath in skipPaths:
+                continue
             for filename in files:
                 if os.path.basename(filename).lower() == "folder":
                     # don't copy the folder image
                     continue
                 if os.path.splitext(filename)[1].lower() in exts:
-                    newName = os.path.join(tmpDir, dest, filename)
+                    newName = os.path.join(toDir, filename)
                     if not os.path.exists(newName):
                         shutil.move(os.path.join(rootpath, filename), newName)
                     else:
                         # Rename the file if conflict using the loop index
                         f = os.path.splitext(newName)
                         shutil.move(os.path.join(rootpath, filename), f[0]+"-"+str(i)+f[1])
-        shutil.rmtree(os.path.join(tmpDir, folder))
 
     def createManifest(self, tmpDir):
         manifest = []
@@ -73,9 +92,13 @@ class Kit:
         manifest.append('</Entries>')
         manifest.append('</Manifest>')
 
-        with open(tmpDir + '/package.manifestx', 'w') as f:
+        with open(os.path.join(tmpDir,'package.manifestx'), 'w') as f:
             for line in manifest:
                 f.write(line + os.linesep)
 
     def CopyKitFiles(self, tmpDir, dest):
-        shutil.copytree(tmpDir, os.path.join(dest, self.name))
+        basePath = os.path.join(dest, self.name)
+        os.mkdir(basePath)
+        for type in self.files:
+            shutil.copytree(os.path.join(tmpDir, type), os.path.join(basePath, type))
+        shutil.copy(os.path.join(tmpDir, "package.manifestx"), basePath)

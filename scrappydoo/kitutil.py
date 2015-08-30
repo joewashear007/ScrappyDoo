@@ -40,10 +40,28 @@ def GetKitName(kit, kitsZips):
     kitStr = kit.rsplit("-", 1)[0]
     name = None
     goodInput = False
+    prevNames = {}
+    
+    # search the lower case names if the filename chaged
+    for x in kitsZips:
+        prevNames[kitsZips[x].name.replace(" ", "").lower()] = kitsZips[x].name
+        prevNames[kitsZips[x].name.replace(" ", "_").lower()] = kitsZips[x].name
+        prevNames[kitsZips[x].name.replace(" ", "-").lower()] = kitsZips[x].name
+    
     while not goodInput:
+        sug_name = ""
         if kitStr in kitsZips:
-            name = input("Please Enter Kit Name (default = " + kitsZips[kitStr].name + "): ")
-            name = name or kitsZips[kitStr].name
+            sug_name = kitsZips[kitStr].name
+        if sug_name == "":
+            lowerName = kitStr.lower();
+            for n in prevNames.keys():
+                if n in lowerName:
+                    sug_name = prevNames[n]
+                    break
+                    
+        if sug_name != "":
+            name = input("Please Enter Kit Name (default = " + sug_name + "): ")
+            name = name or sug_name
             goodInput = True
             if name == "#skip":
                 return None
@@ -58,7 +76,9 @@ def GetKitName(kit, kitsZips):
 
 def GetKitType(kit, kitName):
     #Remove file ext and get the ending -ep
-    kitType = os.path.splitext(kit)[0].rsplit("-", 1)[1]
+    kitType = os.path.splitext(kit)[0]
+    if "-" in kitType:
+        kitType = kitType.rsplit("-", 1)[1]
     types = {1: "embellishment", 2: "alpha", 3: "paper", 4:"other"}
     defaultTypes = {"ep":1, "ap":2, "pp":3, "alpha": 2, "alphas": 2 }
     default = 1
@@ -85,9 +105,12 @@ def GetKitType(kit, kitName):
 
 def ExtractKits(kits, current):
     misc.SetHeader("Extracting Kits, Please Wait ...")
+    errors = []
     for kitName in kits:
         try:
             kits[kitName].extract(current, current)
+            if kits[kitName].hasError:
+                errors.append(kitName)
         except Exception as e:
             print(e)
             print()
@@ -96,6 +119,18 @@ def ExtractKits(kits, current):
             print("So we are going to kip it and move on...")
             print()
             print()
+            errors.append(kitName)
+    if len(errors) > 0:
+        print()
+        print()
+        print("The Following Kits Had Errors:")
+        for e in errors:
+            print(e)
+        print("")
+        print("")
+        print("")
+        input("press Enter to Continue ...")
+    
 
 
 def MoveKitFolders(kits, current):
