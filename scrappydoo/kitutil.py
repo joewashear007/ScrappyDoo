@@ -37,7 +37,11 @@ def ProcessKits(kitFiles):
 
 def GetKitName(kit, kitsZips):
     #remove the end '-pp'
-    kitStr = kit.rsplit("-", 1)[0]
+    kitStr = kit
+    if "-" in kit:
+        kitStr = kit.rsplit("-", 1)[0]
+    if "_" in kit:
+        kitStr = kit.rsplit("_", 1)[0]
     name = None
     goodInput = False
     prevNames = {}
@@ -79,6 +83,8 @@ def GetKitType(kit, kitName):
     kitType = os.path.splitext(kit)[0]
     if "-" in kitType:
         kitType = kitType.rsplit("-", 1)[1]
+    if "_" in kitType:
+        kitType = kitType.rsplit("_", 1)[1]
     types = {1: "embellishment", 2: "alpha", 3: "paper", 4:"other"}
     defaultTypes = {"ep":1, "ap":2, "pp":3, "alpha": 2, "alphas": 2 }
     default = 1
