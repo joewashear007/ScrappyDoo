@@ -1,5 +1,8 @@
 import os
 
+if os.name == "nt":
+    from msvcrt import getch,kbhit
+
 def Welcome():
     print()
     print(" .----. .---. .----.   .--.  .----. .----..-.  .-.   .----.  .----.  .----. ")
@@ -14,6 +17,9 @@ def Welcome():
     os.system('cls' if os.name == 'nt' else 'clear')
 
 def Pause():
+    if os.name == "nt":
+        # clear Stdin, only works on windows
+        while kbhit(): getch()
     print()
     input("Please Press the 'Enter' key to continue...")
 
