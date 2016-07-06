@@ -45,13 +45,13 @@ def GetKitName(kit, kitsZips):
     name = None
     goodInput = False
     prevNames = {}
-    
+
     # search the lower case names if the filename chaged
     for x in kitsZips:
         prevNames[kitsZips[x].name.replace(" ", "").lower()] = kitsZips[x].name
         prevNames[kitsZips[x].name.replace(" ", "_").lower()] = kitsZips[x].name
         prevNames[kitsZips[x].name.replace(" ", "-").lower()] = kitsZips[x].name
-    
+
     while not goodInput:
         sug_name = ""
         if kitStr in kitsZips:
@@ -62,7 +62,7 @@ def GetKitName(kit, kitsZips):
                 if n in lowerName:
                     sug_name = prevNames[n]
                     break
-                    
+
         if sug_name != "":
             name = input("Please Enter Kit Name (default = " + sug_name + "): ")
             name = name or sug_name
@@ -107,16 +107,15 @@ def GetKitType(kit, kitName):
             if actionNum > 0 and actionNum < len(types)+1:
                 return types[actionNum]
 
-
-
 def ExtractKits(kits):
+    """ Takes a dictionary of kit objects and extracts them"""
     misc.SetHeader("Extracting Kits, Please Wait ...")
     errors = []
     for kitName in kits:
         try:
             kits[kitName].extract()
             if kits[kitName].hasError:
-                errors.append(kitName)
+                errors.append(kits[kitName].error)
         except Exception as e:
             print(e)
             print()
@@ -136,8 +135,6 @@ def ExtractKits(kits):
         print("")
         print("")
         input("press Enter to Continue ...")
-    
-
 
 def MoveKitFolders(kits, current):
     misc.SetHeader("Moving Kits")
