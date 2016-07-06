@@ -28,8 +28,8 @@ def main(args):
     print("Lets Get Started! ")
     misc.Pause()
 
-    kits = kitutil.ProcessKits(kitFiles)
-    kitutil.ExtractKits(kits, folder)
+    kits = kitutil.ProcessKits(kitFiles, folder)
+    kitutil.ExtractKits(kits)
     misc.Pause()
 
     # Post processing - Move Files

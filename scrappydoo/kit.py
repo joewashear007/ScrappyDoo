@@ -5,11 +5,16 @@ import uuid
 import shutil
 
 class Kit:
-    def __init__(self, name):
+    def __init__(self, name, dir ):
         self.name = name
         self.files = {}
         self.hasError = False
         self.error = None
+        self.dir = dir
+        self.imageTypeMap = {}
+        p = os.path.join(dir, name)
+        if not os.path.exists(p):
+            os.makedirs(p)
 
     def addFile(self, type, filename):
         if type not in self.files:
@@ -23,15 +28,13 @@ class Kit:
                 kstr += type + ": " + f + "\n"
         return kstr
 
-    def extract(self, fromDir, dest):
+    def extract(self):
         with tempfile.TemporaryDirectory() as tmpDir:
             for type in self.files:
-                tempPath = os.path.join(tmpDir, type)
-                os.makedirs(tempPath)
-                print("Extracting to:", tempPath)
+                print("Extracting to:", tmpDir)
                 for file in self.files[type]:
-                    print("Extracting: ", file, "(", type ,")", "{file:",os.path.join(fromDir, file),"}")
-                    kitzip = zipfile.ZipFile( os.path.join(fromDir, file))
+                    print("Extracting: ", file, "(", type ,")", "{file:",os.path.join(self.dir, file),"}")
+                    kitzip = zipfile.ZipFile( os.path.join(self.dir, file))
                     #layout: tmpDir / filename / stuff
                     try:
                         if kitzip.testzip() is None:
@@ -53,52 +56,42 @@ class Kit:
                         print()
                         print("Error Extracting: ", self.name)
                         input("Please Press the 'Enter' key to continue...")
-                    self.copyImages(tmpDir, tempPath)
+                    self.copyImages(tmpDir, type)
             self.createManifest(tmpDir)
-            self.CopyKitFiles(tmpDir, dest)
 
-    def copyImages(self, fromDir, toDir):
+    def copyImages(self, fromDir, type):
         exts = [".png", ".jpg"]
         print(" -> Copying Images from ", fromDir)
         skipPaths = [fromDir];
-        for type in self.files:
-            skipPaths.append(os.path.join(fromDir, type))
         #counter for renaming
         for i, (rootpath, subdirs, files) in enumerate(os.walk(fromDir)):
-            if rootpath in skipPaths:
+            if rootpath == fromDir:
                 continue
             for filename in files:
                 if os.path.basename(filename).lower() == "folder":
                     # don't copy the folder image
                     continue
                 if os.path.splitext(filename)[1].lower() in exts:
-                    newName = os.path.join(toDir, filename)
-                    if not os.path.exists(newName):
-                        shutil.move(os.path.join(rootpath, filename), newName)
-                    else:
+                    newName = os.path.join(self.dir, self.name, filename)
+                    if os.path.exists(newName):
                         # Rename the file if conflict using the loop index
                         f = os.path.splitext(newName)
-                        shutil.move(os.path.join(rootpath, filename), f[0]+"-"+str(i)+f[1])
+                        newName = f[0]+"-"+str(i)+f[1]
+                shutil.move(os.path.join(rootpath, filename), newName)
+                self.imageTypeMap[newName] = type
+        print("Done!")
 
     def createManifest(self, tmpDir):
         manifest = []
         manifest.append('<Manifest vendorid="0" vendorpackageid="0" maintaincopyright="True" dpi="300">')
         manifest.append('<Groups />')
         manifest.append('<Entries>')
-        for type in self.files:
-            imageType = type if type is "embellishment" or type is "paper" else "embellishment"
-            for image in os.listdir(os.path.join(tmpDir, type)):
-                manifest.append('<Image ID="'+str(uuid.uuid4())+'" Name="'+os.path.join(type, image)+'" Group="'+imageType+'" />')
+        for image in os.listdir(tmpDir):
+            imageType = self.imageTypeMap[image]
+            manifest.append('<Image ID="'+str(uuid.uuid4())+'" Name="'+image+'" Group="'+imageType+'" />')
         manifest.append('</Entries>')
         manifest.append('</Manifest>')
 
-        with open(os.path.join(tmpDir,'package.manifestx'), 'w') as f:
+        with open(os.path.join(self.dir, self.name,'package.manifestx'), 'w') as f:
             for line in manifest:
                 f.write(line + os.linesep)
-
-    def CopyKitFiles(self, tmpDir, dest):
-        basePath = os.path.join(dest, self.name)
-        os.mkdir(basePath)
-        for type in self.files:
-            shutil.copytree(os.path.join(tmpDir, type), os.path.join(basePath, type))
-        shutil.copy(os.path.join(tmpDir, "package.manifestx"), basePath)

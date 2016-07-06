@@ -4,7 +4,7 @@ import shutil
 import subprocess
 from kit import Kit
 
-def ProcessKits(kitFiles):
+def ProcessKits(kitFiles, dir):
     kitsZips = {}
     for x, file in enumerate(kitFiles):
         misc.SetHeader("Get Kit Information ("+ str(x + 1) + " of " + str(len(kitFiles)) + ")")
@@ -19,7 +19,7 @@ def ProcessKits(kitFiles):
         # Kit Name & the filename string of the kit
         name, fileKitStr = kitNameInfo
         if not fileKitStr in kitsZips:
-            kitsZips[fileKitStr] = Kit(name)
+            kitsZips[fileKitStr] = Kit(name, dir)
         kitType = GetKitType(file, name)
         kitsZips[fileKitStr].addFile(kitType, file)
 
@@ -109,12 +109,12 @@ def GetKitType(kit, kitName):
 
 
 
-def ExtractKits(kits, current):
+def ExtractKits(kits):
     misc.SetHeader("Extracting Kits, Please Wait ...")
     errors = []
     for kitName in kits:
         try:
-            kits[kitName].extract(current, current)
+            kits[kitName].extract()
             if kits[kitName].hasError:
                 errors.append(kitName)
         except Exception as e:
